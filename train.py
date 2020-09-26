@@ -71,9 +71,12 @@ model.summary()
 epochs = 100
 batch_size = 48
 
+# model.compile(loss='binary_crossentropy',
+#               optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
+#               metrics=['accuracy'])
 model.compile(loss='binary_crossentropy',
               optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
-              metrics=['accuracy'])
+              metrics=['acc'])
 
 
 history = model.fit(x_train, y_train,
@@ -82,6 +85,7 @@ history = model.fit(x_train, y_train,
                     validation_data=(x_test, y_test),
                     shuffle=True)
 
+print('histroyのkeys: ', history.keys())
 
 scores = model.evaluate(x_test, y_test, verbose=1)
 print('Test loss:', scores[0])
