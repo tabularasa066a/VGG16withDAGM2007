@@ -85,7 +85,7 @@ history = model.fit(x_train, y_train,
                     validation_data=(x_test, y_test),
                     shuffle=True)
 
-print('histroyのkeys: ', history.keys())
+print('histroyのkeys: ', history.history.keys())
 
 scores = model.evaluate(x_test, y_test, verbose=1)
 print('Test loss:', scores[0])
