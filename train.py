@@ -54,7 +54,7 @@ print(x_test.shape[0], 'test samples')
 
 ## modelの読み込み(存在する場合のみ)
 if os.path.exists('./grad1_vgg16_weight_DAGM_C1.h5'):
-  model.load_weights('grad1_vgg16_weight_DAGM_C1.h5')
+  model.load_weights('./grad1_vgg16_weight_DAGM_C1.h5')
 
 
 vgg_conv = VGG16(weights='imagenet', include_top=False, input_shape=(image_size, image_size, 3))
@@ -152,7 +152,7 @@ def Grad_Cam(input_model, pic_array, layer_name):
     return jetcam
 
 
-pic_array = img_to_array(load_img('../DAGM2007/Class1_def/12.png', target_size=(224, 224)))
+pic_array = img_to_array(load_img('../DAGM2007/withDefects/Class1_def/12.png', target_size=(224, 224)))
 pic = pic_array.reshape((1,) + pic_array.shape)
 array_to_img(pic_array)
 
