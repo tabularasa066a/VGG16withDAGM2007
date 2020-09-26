@@ -1,6 +1,7 @@
 ## https://qiita.com/T_Tao/items/0e869e440067518b6b58
 
 from __future__ import print_function
+import tensorflow as tf
 import keras
 from keras.applications import VGG16
 from keras.models import Sequential, load_model, model_from_json
@@ -68,7 +69,7 @@ preds = Dense(2, activation='sigmoid')(mod)
 model = models.Model(vgg_conv.input, preds)
 model.summary()
 
-epochs = 100
+epochs = 2
 batch_size = 48
 
 # model.compile(loss='binary_crossentropy',
@@ -133,13 +134,35 @@ def Grad_Cam(input_model, pic_array, layer_name):
     class_idx = np.argmax(predictions[0])
     class_output = input_model.output[:, class_idx]
 
+    ### tf2
+    grad_model = models.Model([input_model.inputs], [input_model.get_layer(layer_name).output, input_model.output])
+    with tf.GradientTape() as tape:
+        conv_outputs, predictions = grad_model(preprocessed_input)
+        class_idx = np.argmax(predictions[0])
+        loss = predictions[:, class_idx]
+    ###
+
     #  勾配を取得
     conv_output = input_model.get_layer(layer_name).output   # layer_nameのレイヤーのアウトプット
-    grads = K.gradients(class_output, conv_output)[0]  # gradients(loss, variables) で、variablesのlossに関しての勾配を返す
-    gradient_function = K.function([input_model.input], [conv_output, grads])  # input_model.inputを入力すると、conv_outputとgradsを出力する関数
+    # grads = K.gradients(class_output, conv_output)[0]  # gradients(loss, variables) で、variablesのlossに関しての勾配を返す
 
-    output, grads_val = gradient_function([preprocessed_input])
-    output, grads_val = output[0], grads_val[0]
+    """動作不良の源となるので下のブロックで置き換え
+    # gradient_function = K.function([input_model.input], [conv_output, grads])  # input_model.inputを入力すると、conv_outputとgradsを出力する関数
+
+    # output, grads_val = gradient_function([preprocessed_input])
+    # output, grads_val = output[0], grads_val[0]
+    """
+
+    ### tf2
+    grads = tape.gradient(loss, conv_outputs)[0]
+    # gradient_function = tf.function([input_model.input], [conv_output, grads])  # input_model.inputを入力すると、conv_outputとgradsを出力する関数
+    output = conv_outputs[0]
+
+    gate_f = tf.cast(output > 0, 'float32')
+    gate_r = tf.cast(grads > 0, 'float32')
+
+    grads_val = gate_f * gate_r * grads
+    ###
 
     # 重みを平均化して、レイヤーのアウトプットに乗じる
     weights = np.mean(grads_val, axis=(0, 1))
